@@ -254,7 +254,18 @@ sup { font-size: .62em; line-height: 0; }
 }
 @media (max-width: 600px) {
   .visual { grid-template-columns: minmax(0, 1fr); }
+  .scale-slot .vis-card { border: 0; padding: 0; background: transparent; }
+  .scale-slot .caption { display: none; }
+  .scale-slot .scale { max-width: 360px; margin: 0 auto; }
+  .step-of { display: none; }
+  .step { padding: 16px; }
+  .step-h h2 { font-size: 1.2rem; }
+  .lab { font-size: 23px; }
+  .opt { font-size: 1.2rem; padding: 8px 14px; }
+  .top h1 { font-size: 2.1rem; }
   .tryer { grid-template-columns: minmax(0, 1fr); }
+  .tryer > div:last-child { order: -1; display: flex; flex-direction: column; align-items: center; text-align: center; }
+  .tryer svg { max-width: 190px; }
   .task-text { font-size: 1.15rem; }
   .eq { font-size: 1.25rem; }
 }
@@ -298,7 +309,7 @@ sup { font-size: .62em; line-height: 0; }
         <svg id="boxSvg" data-w="420" data-h="300" role="img" aria-label="Bild av lådan med dess mått"></svg>
         <p class="caption" id="boxCaption"></p>
       </div>
-      <div class="card vis-card">
+      <div class="card vis-card" id="scaleCard">
         <div class="label">Ekvationen är en våg</div>
         <div class="scale" id="scale">
           <svg viewBox="0 0 320 200" aria-hidden="true">
@@ -616,7 +627,7 @@ function mountStep(i) {
   const el = document.createElement('section');
   el.className = 'card step active';
   el.innerHTML = `<header class="step-h"><span class="step-n">${i + 1}</span><h2>${st.title}</h2><span class="step-of">Steg ${i + 1} av ${STEPS.length}</span></header>
-    <div class="step-body">${st.body()}</div><div class="interact"></div><div class="feedback"></div>
+    <div class="step-body">${st.body()}</div><div class="scale-slot"></div><div class="interact"></div><div class="feedback"></div>
     ${st.hint ? `<div class="step-foot"><button type="button" class="hint-btn">Visa ledtråd</button></div><div class="hint" hidden>${st.hint}</div>` : ''}`;
   $('#steps').appendChild(el);
   const ctx = {
@@ -641,6 +652,7 @@ function mountStep(i) {
   };
   const hb = el.querySelector('.hint-btn');
   if (hb) hb.onclick = () => ctx.showHint();
+  placeScale();
   st.mount(ctx);
   if (i > 0) el.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'nearest' });
 }
@@ -870,6 +882,7 @@ function finish() {
       ${level < 3 ? `<button type="button" class="btn ghost big" data-act="harder">Svårare tal</button>` : ''}
     </div>`;
   $('#steps').appendChild(el);
+  placeScale();
   el.querySelector('[data-act="same"]').onclick = () => newProblem();
   const hb = el.querySelector('[data-act="harder"]');
   if (hb) hb.onclick = () => { setLevel(level + 1); newProblem(); };
@@ -922,6 +935,15 @@ function setLevel(lv) {
 document.querySelectorAll('.level button').forEach(b => b.onclick = () => { setLevel(+b.dataset.level); newProblem(); });
 $('#newBtn').onclick = () => newProblem();
 $('#origBtn').onclick = () => { setLevel(2); start(ORIGINAL()); };
+
+/* På mobil följer vågen med in i det steg man jobbar med */
+const mq = window.matchMedia('(max-width: 600px)');
+function placeScale() {
+  const card = $('#scaleCard'), slot = document.querySelector('.step.active .scale-slot');
+  if (mq.matches && slot) { if (card.parentElement !== slot) slot.appendChild(card); }
+  else if (card.parentElement !== $('.visual')) $('.visual').appendChild(card);
+}
+if (mq.addEventListener) mq.addEventListener('change', placeScale);
 
 drawScale();
 start(ORIGINAL());
